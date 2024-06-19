@@ -16,14 +16,16 @@ def chat_view(request,chatroom_name ='public-chat'):
             if member != request.user:
                 other_user = member
                 break
-    if request.htmx:
-        body = request.POST.get('message')
-        message = Message.objects.create(user=request.user,group=chat_group,body=body)
-        context = {
-            'message':message,
-            'user': request.user
-        }
-        return render(request,'rtchat/partials/chat_message_p.html',context)
+    #does not need anymore when using websocket
+    # if request.htmx:
+    #     body = request.POST.get('message')
+    #     message = Message.objects.create(user=request.user,group=chat_group,body=body)
+    #     context = {
+    #         'message':message,
+    #         'user': request.user
+    #     }
+    #     return render(request,'rtchat/partials/chat_message_p.html',context)
+        
     context = {
         'chat_messages':messages,
         'other_user': other_user,
