@@ -4,6 +4,8 @@ from django.http import Http404
 from django.contrib import messages
 from .models import *
 from django.contrib.auth.decorators import login_required
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 # Create your views here.
 @login_required
 def chat_view(request,chatroom_name ='public-chat'):
@@ -78,6 +80,7 @@ def chatroom_edit_view(request,chatroom_name):
     chat_group = get_object_or_404(ChatGroup,group_name=chatroom_name)
     if request.user != chat_group.admin:
         raise Http404()
+    
     if request.method =='POST':
         chat_group.groupchat_name = request.POST.get('groupchat_name')
         chat_group.save()
@@ -85,6 +88,14 @@ def chatroom_edit_view(request,chatroom_name):
         for member_id in remove_members:
             member = User.objects.get(id = member_id)
             chat_group.members.remove(member)
+            channel_layer = get_channel_layer()
+            user_channels = UserChannel.objects.filter(member=member, group=chat_group)
+            for user_channel in user_channels:
+                        async_to_sync(channel_layer.group_discard)(
+                                    chatroom_name,
+                                    user_channel.channel
+                    )
+            user_channel.delete()
         return redirect('chatroom',chatroom_name)
         
     return render(request,'rtchat/chatroom_edit.html',{'chat_group':chat_group})
@@ -100,3 +111,16 @@ def chatroom_delete_view(request,chatroom_name):
         return redirect(reverse('home'))
     
     return render(request,'rtchat/chatroom_delete.html',{'chat_group':chat_group})
+
+@login_required
+def chatroom_leave_view(request,chatroom_name):
+    chat_group = get_object_or_404(ChatGroup,group_name=chatroom_name)
+    if request.user not in chat_group.members.all():
+        raise Http404()
+    if chat_group.admin == request.user:
+        chat_group.admin = chat_group.members.exclude(id=request.user.id).first()
+    chat_group.members.remove(request.user)
+    if chat_group.members.count() == 1:
+        chat_group.delete()
+    messages.success(request,'You left the Chat')
+    return redirect(reverse('home'))
