@@ -16,6 +16,10 @@ def chat_view(request,chatroom_name ='public-chat'):
             if member != request.user:
                 other_user = member
                 break
+    if chat_group.groupchat_name:
+        if request.user not in chat_group.members.all():
+            chat_group.members.add(request.user)
+    
     #does not need anymore when using websocket
     # if request.htmx:
     #     body = request.POST.get('message')
@@ -29,7 +33,8 @@ def chat_view(request,chatroom_name ='public-chat'):
     context = {
         'chat_messages':messages,
         'other_user': other_user,
-        'group_name': chatroom_name
+        'group_name': chatroom_name,
+        'chat_group':chat_group
     }
     return render(request,'rtchat/chat.html',context)
 
@@ -51,3 +56,15 @@ def get_or_create_chatroom(request,username):
         chatroom = ChatGroup.objects.create(is_private=True)
         chatroom.members.add(other_user,request.user)
     return redirect('chatroom',chatroom_name=chatroom.group_name)
+
+@login_required
+def create_groupchat(request):
+    if request.method =='POST':
+        groupchat_name = request.POST.get("groupchat_name")
+        new_groupchat = ChatGroup.objects.create(admin=request.user,groupchat_name = groupchat_name)
+        new_groupchat.members.add(request.user)
+        # context = {
+        #     'message': 
+        # }
+        return redirect('chatroom',new_groupchat.group_name)
+    return render(request,'rtchat/create_groupchat.html')

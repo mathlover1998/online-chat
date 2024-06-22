@@ -2,6 +2,9 @@
 {% block content %}
 
 <wrapper class="block max-w-2xl mx-auto my-10 px-6">
+    {% if chat_group.groupchat_name %}
+    <h2>{{chat_group.groupchat_name}}</h2>
+    {% endif %}
     <div id="chat_window" class="h-[45rem] flex flex-col bg-gray-800 rounded-2xl shadow-2xl relative p-1">
         <div class="flex justify-center text-emerald-400 bg-gray-800 p-2 sticky top-0 z-10">
         <!-- display private chat -->
@@ -40,25 +43,11 @@
             {% endfor %}
             </ul>
         </div>
-        {% if other_user %}
-        <div class="sticky bottom-0 z-10 p-2 bg-gray-800">
-            <div class="flex items-center rounded-xl px-2 py-2">
-                <form id="chat_message_form" class="w-full"
-                hx-post = "{% url 'chatroom' group_name %}"
-                hx-target = "#chat_messages"
-                hx-swap = "beforeend"
-                _="on htmx:afterRequest reset() me">
-                    {% csrf_token %}
-                    <input type="text" name="message" placeholder="Add message ..." maxlength="150">
-                </form>
-            </div>
-        </div>
-        {% else %}
         <div class="sticky bottom-0 z-10 p-2 bg-gray-800">
             <div class="flex items-center rounded-xl px-2 py-2">
                 <form id="chat_message_form" class="w-full"
                 hx-ext = "ws"
-                ws-connect = "/ws/chatroom/public-chat"
+                ws-connect = "/ws/chatroom/{{group_name}}"
                 ws-send
                 _="on htmx:wsAfterSend reset() me">
                     {% csrf_token %}
@@ -66,7 +55,6 @@
                 </form>
             </div>
         </div>
-        {% endif %}
     </div>
 </wrapper>
 {% endblock content %}

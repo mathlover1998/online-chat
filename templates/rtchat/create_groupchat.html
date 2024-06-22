@@ -1,0 +1,9 @@
+{% extends "layouts/box.html" %}
+{% block content %}
+<h1>New Group Chat</h1>
+<form method='post'>
+{% csrf_token %}
+<input type="text" name="groupchat_name" placeholder= "Add name" class='p-4 text-black' maxlength='300' autoforcus>
+<input type="submit" value="Create group" class='mt-2'>
+</form>
+{% endblock content %}
