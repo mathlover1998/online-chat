@@ -73,6 +73,7 @@ def create_groupchat(request):
         return redirect('chatroom',new_groupchat.group_name)
     return render(request,'rtchat/create_groupchat.html')
 
+@login_required
 def chatroom_edit_view(request,chatroom_name):
     chat_group = get_object_or_404(ChatGroup,group_name=chatroom_name)
     if request.user != chat_group.admin:
@@ -88,9 +89,14 @@ def chatroom_edit_view(request,chatroom_name):
         
     return render(request,'rtchat/chatroom_edit.html',{'chat_group':chat_group})
 
-# def invite_member(request):
-#     return render(request,'rtchat/')
-
-# def remove_member(request):
-
-#     return redirect()
+@login_required
+def chatroom_delete_view(request,chatroom_name):
+    chat_group = get_object_or_404(ChatGroup,group_name=chatroom_name)
+    if request.user != chat_group.admin:
+        raise Http404()
+    if request.method=='POST':
+        chat_group.delete()
+        messages.success(request,'Chatroom deleted')
+        return redirect(reverse('home'))
+    
+    return render(request,'rtchat/chatroom_delete.html',{'chat_group':chat_group})
