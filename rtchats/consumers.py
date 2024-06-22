@@ -32,8 +32,9 @@ class ChatroomConsumer(WebsocketConsumer):
         async_to_sync(self.channel_layer.group_discard)(
             self.chatroom_name,self.channel_name
         )
-        user_channel = UserChannel.objects.get(channel=self.channel_name )
-        user_channel.delete()
+        if self.chatroom.groupchat_name:
+            user_channel = UserChannel.objects.get(channel=self.channel_name )
+            user_channel.delete()
         #add or update onlines users
         if self.user in self.chatroom.users_online.all():
             self.chatroom.users_online.remove(self.user)
@@ -87,5 +88,5 @@ class ChatroomConsumer(WebsocketConsumer):
         html = render_to_string('rtchat/partials/online_count.html',context)
         self.send(text_data=html)
 
-    def update_member(self):
-        pass
+    # def update_member(self):
+    #     pass
